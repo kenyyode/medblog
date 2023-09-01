@@ -1,6 +1,6 @@
 from medblog import app, SQLAlchemy, request, redirect, jsonify
 from routes import *
-from models import blog
+from models import blog, Comment
 
 
 

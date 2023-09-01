@@ -45,3 +45,31 @@ def delete_post(post_id):
         return jsonify({'message': 'Post not found'}), 404
     post.delete()
     return jsonify({'message': 'Blog post deleted successfully'})
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['POST'])
+def create_comment(post_id):
+    data = request.get_json()
+    blog_post = blog.query.get(post_id)
+
+    if not blog_post:
+        return jsonify({'message': 'Blog post not found'}), 404
+
+    comment_text = data.get('text')
+
+    if not comment_text:
+        return jsonify({'message': 'Comment text is required'}), 400
+
+    new_comment = Comment(text=comment_text, blog=blog_post)
+    db.session.add(new_comment)
+    db.session.commit()
+    return jsonify({'message': 'Comment created successfully'})
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['GET'])
+def get_comments(post_id):
+    blog_post = blog.query.get(post_id)
+
+    if not blog_post:
+        return jsonify({'message': 'Blog post not found'}), 404
+
+    comments = [comment.serialize() for comment in blog_post.comments]
+    return jsonify(comments)
