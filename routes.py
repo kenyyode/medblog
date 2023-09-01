@@ -18,5 +18,30 @@ def create_new_post():
     return jsonify({"message":"Your Post was successfully added"})
 
 
-#new_post = Blog(body="Your blog content", Head="Your Blog Post Title", comments="Your comments here")
-#new_post.save()
+@app.route('/api/posts/<int:post_id>', methods=['GET'])
+def get_post(post_id):
+    post = blog.query.get(post_id)
+    if post:
+        return jsonify(post.serialize())
+    else:
+        return jsonify({'message': 'Post not found'}), 404
+    
+
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def update_post(post_id):
+    data = request.get_json()
+    post = blog.query.get(post_id)
+    if not post:
+        return jsonify({'message': 'Post not found'}), 404
+    for key, value in data.items():
+        setattr(post, key, value)
+    post.save()
+    return jsonify({'message': 'Blog post updated successfully'})
+
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    post = bloglog.query.get(post_id)
+    if not post:
+        return jsonify({'message': 'Post not found'}), 404
+    post.delete()
+    return jsonify({'message': 'Blog post deleted successfully'})
