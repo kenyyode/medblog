@@ -75,3 +75,27 @@ def get_comments(post_id):
 
     comments = [comment.serialize() for comment in blog_post.comments]
     return jsonify(comments)
+
+@app.route('/api/posts/<int:post_id>/like', methods=['POST'])
+def like_post(post_id):
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    post = blog.query.get(post_id)
+    if not post:
+        return jsonify({'message': 'Post not found'}), 404
+
+    post.like_post(user_id)
+    return jsonify({'message': 'Post liked successfully'})
+
+@app.route('/api/posts/<int:post_id>/unlike', methods=['POST'])
+def unlike_post(post_id):
+    data = request.get_json()
+    user_id = data.get('user_id')
+
+    post = blog.query.get(post_id)
+    if not post:
+        return jsonify({'message': 'Post not found'}), 404
+
+    post.unlike_post(user_id)
+    return jsonify({'message': 'Post unliked successfully'})
