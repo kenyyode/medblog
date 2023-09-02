@@ -1,5 +1,5 @@
 from medblog import app, request, jsonify, db
-from models import blog
+from models import blog, Comment
 
 @app.route('/')
 def hello_world():
@@ -13,7 +13,9 @@ def get_all_posts():
 @app.route('/api/posts', methods=["POST"])
 def create_new_post():
     data = request.get_json()
-    new_post = blog(**data)
+    valid_fields = ["head", "body", "user_id"]
+    filtered_fields = {key:data[key] for key in valid_fields if key in data}
+    new_post = blog(filtered_fields)
     new_post.save()
     return jsonify({"message":"Your Post was successfully added"})
 
@@ -40,7 +42,7 @@ def update_post(post_id):
 
 @app.route('/api/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
-    post = bloglog.query.get(post_id)
+    post = blog.query.get(post_id)
     if not post:
         return jsonify({'message': 'Post not found'}), 404
     post.delete()
