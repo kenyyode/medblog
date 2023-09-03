@@ -15,7 +15,12 @@ def create_new_post():
     data = request.get_json()
     valid_fields = ["head", "body", "user_id"]
     filtered_fields = {key:data[key] for key in valid_fields if key in data}
-    new_post = blog(filtered_fields)
+    
+    new_post = blog(
+        head= filtered_fields.get("head"),
+        body= filtered_fields.get("body"),
+        user_id = filtered_fields.get("user_id")
+        )
     new_post.save()
     return jsonify({"message":"Your Post was successfully added"})
 

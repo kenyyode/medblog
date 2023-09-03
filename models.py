@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 class blog(db.Model):
     post_id = db.Column(db.Integer(), primary_key=True)
     body = db.Column(db.Text(), nullable=False)
-    Head = db.Column(db.String(), nullable=False)
+    head = db.Column(db.String(), nullable=False)
     date_created = db.Column(db.DateTime(), nullable=False, default=db.func.current_timestamp())
     slug = db.Column(db.String(100), nullable=False, unique=True)
     comments = relationship ('Comment', backref='blog', lazy=True)
@@ -13,7 +13,7 @@ class blog(db.Model):
     liked_by_user_ids = db.Column(db.String(255))
 
     def generate_slug(self):
-        return slugify(self.Head)  # Generate the slug from the title
+        return slugify(self.head)  # Generate the slug from the title
 
     def save(self):
         # Generate and set the slug
@@ -39,6 +39,13 @@ class blog(db.Model):
             liked_users.remove(user_id_str)
             self.liked_by_user_ids = ','.join(liked_users)
             db.session.commit()
+
+    def serialize(self):
+        return {
+        'id': self.post_id,
+        'title': self.head,
+        'content': self.body}
+
 
     def __repr__(self):
         return f'<Blog {self.id}: {self.head}>'
