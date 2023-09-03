@@ -46,4 +46,4 @@ class blog(db.Model):
 class Comment(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     text = db.Column(db.Text, nullable=True)
-    blog_id = db.Column(db.Integer(), db.ForeignKey("blog.id"), nullable=True)    
+    blog_id = db.Column(db.Integer(), db.ForeignKey("blog.post_id"), nullable=True)    
