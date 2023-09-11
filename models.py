@@ -2,15 +2,20 @@ from medblog import db, app
 from slugify import slugify
 from sqlalchemy.orm import relationship
 
+
 class blog(db.Model):
     post_id = db.Column(db.Integer(), primary_key=True)
     body = db.Column(db.Text(), nullable=False)
     head = db.Column(db.String(), nullable=False)
     date_created = db.Column(db.DateTime(), nullable=False, default=db.func.current_timestamp())
     slug = db.Column(db.String(100), nullable=False, unique=True)
-    comments = relationship ('Comment', backref='blog', lazy=True)
     user_id = db.Column(db.Integer(), nullable=False)
     liked_by_user_ids = db.Column(db.String(255))
+   
+    ##relationships
+    comments = relationship ('Comment', backref='blog', lazy=True)
+    likes = relationship ('Like', backref='blog', lazy=True)
+    #likes = relationship("Postlike", backref="blog", lazy=True)
 
     def generate_slug(self):
         return slugify(self.head)  # Generate the slug from the title
@@ -25,20 +30,6 @@ class blog(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-    def like_post(self, user_id):
-        # Check if user_id is not already in the liked_by_user_ids
-        if str(user_id) not in self.liked_by_user_ids.split(','):
-            self.liked_by_user_ids = f"{self.liked_by_user_ids},{user_id}"
-            db.session.commit()
-
-    def unlike_post(self, user_id):
-        # Check if user_id is in the liked_by_user_ids
-        user_id_str = str(user_id)
-        if user_id_str in self.liked_by_user_ids.split(','):
-            liked_users = self.liked_by_user_ids.split(',')
-            liked_users.remove(user_id_str)
-            self.liked_by_user_ids = ','.join(liked_users)
-            db.session.commit()
 
     def serialize(self):
         return {
@@ -52,5 +43,39 @@ class blog(db.Model):
 
 class Comment(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
-    text = db.Column(db.Text, nullable=True)
-    blog_id = db.Column(db.Integer(), db.ForeignKey("blog.post_id"), nullable=True)    
+    text = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer(), nullable=False)
+    blog_id = db.Column(db.Integer(), db.ForeignKey("blog.post_id"), nullable=False)  
+
+    def save(self): 
+        db.session.add(self) 
+        db.session.commit()
+    
+    def serialize(self):
+        return {
+            "id":self.id,
+            "text": self.text,
+            "user_id": self.user_id
+        }
+    def __repr__(self):
+        return f'<Comment {self.id}: {self.text}'
+
+class Like(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    likes = db.Column(db.Integer(), nullable=False)
+    user_id = db.Column(db.Integer(), nullable=False)
+    blog_id = db.Column(db.Integer(), db.ForeignKey("blog.post_id"), nullable=False)  
+
+    def save(self): 
+        db.session.add(self) 
+        db.session.commit()
+    
+    def serialize(self):
+        return {
+            "id":self.id,
+            "likes": self.likes,
+            "user_id": self.user_id
+        }
+    def __repr__(self):
+        return f'<Like {self.id}: {self.likes}'
+

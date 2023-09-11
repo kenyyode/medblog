@@ -1,5 +1,5 @@
 from medblog import app, request, jsonify, db
-from models import blog, Comment
+from models import blog, Comment, Like
 
 @app.route('/')
 def hello_world():
@@ -15,7 +15,7 @@ def create_new_post():
     data = request.get_json()
     valid_fields = ["head", "body", "user_id"]
     filtered_fields = {key:data[key] for key in valid_fields if key in data}
-    
+
     new_post = blog(
         head= filtered_fields.get("head"),
         body= filtered_fields.get("body"),
@@ -62,13 +62,13 @@ def create_comment(post_id):
         return jsonify({'message': 'Blog post not found'}), 404
 
     comment_text = data.get('text')
+    user_id = data.get("user_id")
 
     if not comment_text:
         return jsonify({'message': 'Comment text is required'}), 400
 
-    new_comment = Comment(text=comment_text, blog=blog_post)
-    db.session.add(new_comment)
-    db.session.commit()
+    new_comment = Comment(text=comment_text, blog=blog_post, user_id=user_id)
+    new_comment.save()
     return jsonify({'message': 'Comment created successfully'})
 
 @app.route('/api/posts/<int:post_id>/comments', methods=['GET'])
@@ -81,26 +81,34 @@ def get_comments(post_id):
     comments = [comment.serialize() for comment in blog_post.comments]
     return jsonify(comments)
 
-@app.route('/api/posts/<int:post_id>/like', methods=['POST'])
-def like_post(post_id):
+@app.route('/api/posts/<int:post_id>/likes', methods=['POST'])
+def create_like(post_id):
     data = request.get_json()
-    user_id = data.get('user_id')
+    blog_post = blog.query.get(post_id)
 
-    post = blog.query.get(post_id)
-    if not post:
-        return jsonify({'message': 'Post not found'}), 404
+    if not blog_post:
+        return jsonify({'message': 'Blog post not found'}), 404
 
-    post.like_post(user_id)
-    return jsonify({'message': 'Post liked successfully'})
+    like = data.get('likes')
+    user_id = data.get("user_id")
 
-@app.route('/api/posts/<int:post_id>/unlike', methods=['POST'])
-def unlike_post(post_id):
-    data = request.get_json()
-    user_id = data.get('user_id')
+    if not like:
+        return jsonify({'message': 'like text is required'}), 400
+    if like != 1:
+        return jsonify({"message":"No valid like"})
 
-    post = blog.query.get(post_id)
-    if not post:
-        return jsonify({'message': 'Post not found'}), 404
+    new_like = Like(likes=like, blog=blog_post, user_id=user_id)
+    new_like.save()
+    all_likes = [like.serialize() for like in blog_post.likes]
+    lenght_likes = len(all_likes)
+    return jsonify({'message': 'like created successfully'}, lenght_likes)
 
-    post.unlike_post(user_id)
-    return jsonify({'message': 'Post unliked successfully'})
+#@app.route('/api/posts/<int:post_id>/likes', methods=['GET'])
+#def get_comments(post_id):
+    blog_post = blog.query.get(post_id)
+
+    if not blog_post:
+        return jsonify({'message': 'Blog post not found'}), 404
+
+    #comments = [comment.serialize() for comment in blog_post.comments]
+    return jsonify(comments)
